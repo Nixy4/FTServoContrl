@@ -88,4 +88,68 @@ static inline uint32_t calc_param_size(uint32_t size)
 	// size - (magic(2) + id(1) + pro_len(1) + code(1) + checksum(1))
 }
 
+static void pack(uint8_t* pkt, uint32_t pktsiz,
+	uint8_t id, uint8_t code, uint32_t param_len, ...)
+{
+	//Fill Header
+	pkt[PKTIDX_MAGIC1] = MAGIC1;
+	pkt[PKTIDX_MAGIC2] = MAGIC2;
+	pkt[PKTIDX_ID] = id;
+	pkt[PKTIDX_PRO_LEN] = calc_pro_len(param_len);
+	pkt[PKTIDX_CODE] = code;
+	//Fill Params
+	if (param_len != 0) {
+		va_list params;
+		va_start(params, param_len);
+		for (uint32_t i = 0; i < param_len; i++) {
+			pkt[PKTIDX_PARAM(i)] = va_arg(params, int);
+		}
+	}
+	//Fill Checksum
+	pkt[PKTIDX_CHECKSUM(pktsiz)] = calc_checksum(pkt, pktsiz);
+}
 
+static void unpack(uint8_t* pkt, uint32_t pktsiz,
+	uint8_t* id, uint8_t* code, uint32_t* param_len, uint8_t* param_buf)
+{
+	if (pkt == NULL || pktsiz < PKT_MINIMUM_SIZE) {
+		return; // Invalid packet
+	}
+	if (pkt[PKTIDX_MAGIC1] != MAGIC1 || pkt[PKTIDX_MAGIC2] != MAGIC2) {
+		return; // Invalid packet
+	}
+	if (id != NULL) {
+		*id = pkt[PKTIDX_ID];
+	}
+	if (code != NULL) {
+		*code = pkt[PKTIDX_CODE];
+	}
+	if (param_len != NULL) {
+		*param_len = pkt[PKTIDX_PRO_LEN] - 2; // code(1) + checksum(1)
+	}
+}
+
+void scs_ping(uint8_t id)
+{
+	// Calculate packet size for ping
+	uint32_t pktsiz = calc_pktsiz(0);
+	// Allocate memory for the packet
+	uint8_t* pkt = (uint8_t*)malloc(pktsiz);
+	if (pkt == NULL) {
+		return; // Memory allocation failed
+	}
+	// Pack the ping packet
+	pack(pkt, pktsiz, id, CODE_PING, 0);
+	// Send the packet
+	if (send != NULL) {
+		send(pkt, pktsiz);
+	}
+	// Recveive the response
+	memset(pkt, 0, pktsiz); // Clear the packet 
+	if (recv != NULL) {
+		pktsiz = recv(pkt, pktsiz);
+	}
+	uint8_t id_ = 0;
+	uint8_t code_ = 0;
+	unpack(pkt, pktsiz, &id_, &code_, NULL, NULL);
+}
