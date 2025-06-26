@@ -24,7 +24,7 @@
 #define IDX_MAGIC1                 0
 #define IDX_MAGIC2                 1
 #define IDX_ID                     2
-#define IDX_PRO_LEN                3
+#define IDX_PROLEN                3
 #define IDX_CODE                   4
 #define IDX_PARAM_START            5
 #define IDX_PARAM_ADDR             5

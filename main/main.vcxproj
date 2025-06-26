@@ -101,6 +101,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="elog.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="scs.h" />
     <ClInclude Include="scs_def.h" />
