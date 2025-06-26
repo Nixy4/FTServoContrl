@@ -3,27 +3,34 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <stdlib.h>
 
-static scs_send_callback send= NULL;
+static scs_send_callback send = NULL;
 static scs_recv_callback recv = NULL;
 static scs_delay_callback delay = NULL;
 static scs_gettick_callback gettick = NULL;
 
 void scs_callback_register(
+	scs_malloc_callback malloc_cb,
+	scs_free_callback free_cb,
 	scs_send_callback send_cb, 
 	scs_recv_callback recv_cb,
 	scs_delay_callback delay_cb,
 	scs_gettick_callback gettick_cb
 ) {
-	//参数校验
-	if (send_cb == NULL || recv_cb == NULL || delay_cb == NULL || gettick_cb == NULL) {
-		return; // Invalid callback
+	//1.处理内存回调
+	if(malloc_cb != NULL && free_cb != NULL) {
+		send = malloc_cb;
+		recv = free_cb;
+	} else {
+		send = malloc;
+		recv = free;
 	}
-	else {
+	//2.处理数据传输回调
+	if(send_cb != NULL) {
 		send = send_cb;
-		recv = recv_cb;
-		delay = delay_cb;
-		gettick = gettick_cb;
+	} else {
+		send = NULL; // 默认不发送数据
 	}
 }
 
