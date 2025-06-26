@@ -95,7 +95,7 @@ static void pack(uint8_t* buf, uint32_t bufsiz,
 	buf[BUFIDX_MAGIC1] = MAGIC1;
 	buf[BUFIDX_MAGIC2] = MAGIC2;
 	buf[BUFIDX_ID] = id;
-	buf[BUFIDX_PROLEN] = calc_pro_len(param_len);
+	buf[BUFIDX_PROLEN] = calc_prolen(param_len);
 	buf[BUFIDX_CODE] = code;
 	//Fill Params
 	if (param_len != 0) {
@@ -107,6 +107,8 @@ static void pack(uint8_t* buf, uint32_t bufsiz,
 	}
 	//Fill Checksum
 	buf[BUFIDX_CHECKSUM(bufsiz)] = calc_checksum(buf, bufsiz);
+	//打印数据包
+
 }
 
 static void unpack(uint8_t* buf, uint32_t bufsiz,
@@ -132,9 +134,9 @@ static void unpack(uint8_t* buf, uint32_t bufsiz,
 void scs_ping(uint8_t id)
 {
 	// Calculate packet size for ping
-	uint32_t bufsiz = calc_bufsiz(0);
+	uint32_t bufsiz = calc_size(0);
 	// Allocate memory for the packet
-	uint8_t* buf = (uint8_t*)malloc(bufsiz);
+	uint8_t* buf = (uint8_t*)scs_malloc(bufsiz);
 	if (buf == NULL) {
 		return; // Memory allocation failed
 	}
@@ -152,4 +154,6 @@ void scs_ping(uint8_t id)
 	uint8_t id_ = 0;
 	uint8_t code_ = 0;
 	unpack(buf, bufsiz, &id_, &code_, NULL, NULL);
+	elog_d(TAG, "Ping response: ID=%d, Code=%d", id_, code_);
+	scs_free(buf);
 }

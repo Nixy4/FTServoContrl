@@ -61,8 +61,6 @@ int ReadFromSerialPort(HANDLE hComx, void* buffer, DWORD length)
     return static_cast<int>(bytesRead);
 }
 
-
-
 void scs_port_init(const wchar_t* portName, DWORD baudRate, BYTE byteSize, BYTE parity, BYTE stopBits)
 {
     hCom = OpenSerialPort(portName);
@@ -72,6 +70,14 @@ void scs_port_init(const wchar_t* portName, DWORD baudRate, BYTE byteSize, BYTE 
     }
     if (SetSerialPortParams(hCom, baudRate, byteSize, parity, stopBits) != 0) {
         printf("Failed to set serial port parameters\n");
+        CloseHandle(hCom);
+        hCom = INVALID_HANDLE_VALUE;
+    }
+}
+
+void scs_port_deinit()
+{
+    if (hCom != INVALID_HANDLE_VALUE) {
         CloseHandle(hCom);
         hCom = INVALID_HANDLE_VALUE;
     }
@@ -149,13 +155,12 @@ int main()
 
 	scs_memory_init();
 
-    scs_port_init(L"COM3", 500000, 8, NOPARITY, ONE5STOPBITS);
+    scs_port_init(L"COM5", 500000, 8, NOPARITY, ONE5STOPBITS);
     if (hCom == INVALID_HANDLE_VALUE) {
         printf("Failed to initialize serial port\n");
         return -1;
 	}
 
-	scs_port_init(L"COM3", 500000, 8, NOPARITY, ONE5STOPBITS);
-    int ret = scs_ping(42);
+    scs_ping(42);
     return 0;
 }

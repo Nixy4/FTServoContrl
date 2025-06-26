@@ -55,7 +55,7 @@ typedef struct scs_packet {
 	uint8_t param[];         // 参数数据
 } scs_packet;
 
-int scs_ping(uint8_t id);
+void scs_ping(uint8_t id);
 
 #ifdef __cplusplus
 }
