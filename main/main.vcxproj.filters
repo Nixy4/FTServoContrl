@@ -24,6 +24,9 @@
     <ClInclude Include="scs_def.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="elog.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

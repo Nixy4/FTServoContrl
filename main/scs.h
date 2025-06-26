@@ -7,8 +7,19 @@
 extern "C" {
 #endif
 
-typedef void (*scs_send_callback)(uint8_t* pkt, uint32_t pktsiz);
-typedef uint32_t (*scs_recv_callback)(uint8_t* pkt, uint32_t bufsiz);
+#define SCS_OK				      0
+#define SCS_ERR_GENERIC           -1000
+#define SCS_ERR_CALLBACK  -1
+#define SCS_ERR_MEMORY_ALLOC      -2
+#define SCS_ERR_BUF_SIZE    -3
+#define SCS_ERR_MAGIC    -4
+#define SCS_ERR_CHECKSUM -5
+#define SCS_ERR_PARAM_SIZE -6
+#define SCS_ERR_RESPONSE_ID -7
+#define SCS_ERR_PACKET_SIZE -8
+
+typedef void (*scs_send_callback)(uint8_t* buf, uint32_t size);
+typedef uint32_t (*scs_recv_callback)(uint8_t* buf, uint32_t size);
 typedef void (*scs_delay_callback)(uint32_t delay_ms);
 typedef uint32_t(*scs_gettick_callback)(void);
 
@@ -19,7 +30,24 @@ void scs_callback_register(
 	scs_gettick_callback gettick_cb
 );
 
-void scs_ping(uint8_t id);
+typedef struct scs_header {
+	uint8_t magic1;          // 魔术字节1
+	uint8_t magic2;          // 魔术字节2
+	uint8_t id;              // ID
+	uint8_t prolen;          // 协议长度
+	uint8_t code;            // 命令码
+} scs_header;
+
+typedef struct scs_packet {
+	uint8_t magic1;          // 魔术字节1
+	uint8_t magic2;          // 魔术字节2
+	uint8_t id;              // ID
+	uint8_t prolen;          // 协议长度
+	uint8_t code;            // 命令码
+	uint8_t param[];         // 参数数据
+} scs_packet;
+
+int scs_ping(uint8_t id);
 
 #ifdef __cplusplus
 }

@@ -20,6 +20,24 @@ HANDLE OpenSerialPort(const wchar_t* portName)
     return hComx;
 }
 
+// 设置COM口参数，成功返回0，失败返回-1
+int SetSerialPortParams(HANDLE hComx, DWORD baudRate, BYTE byteSize, BYTE parity, BYTE stopBits)
+{
+    DCB dcb = { 0 };
+    dcb.DCBlength = sizeof(DCB);
+    if (!GetCommState(hComx, &dcb)) {
+        return -1; // 获取COM口状态失败
+    }
+    dcb.BaudRate = baudRate;
+    dcb.ByteSize = byteSize;
+    dcb.Parity = parity;
+    dcb.StopBits = stopBits;
+    if (!SetCommState(hComx, &dcb)) {
+        return -1; // 设置COM口状态失败
+    }
+    return 0; // 成功
+}
+
 // 向指定COM口写入数据，返回实际写入的字节数，失败返回-1
 int WriteToSerialPort(HANDLE hComx, const void* buffer, DWORD length)
 {
@@ -30,11 +48,50 @@ int WriteToSerialPort(HANDLE hComx, const void* buffer, DWORD length)
     return static_cast<int>(bytesWritten);
 }
 
+// 从指定COM口读取数据，返回实际读取的字节数，失败返回-1
+int ReadFromSerialPort(HANDLE hComx, void* buffer, DWORD length)
+{
+    DWORD bytesRead = 0;
+    if (!ReadFile(hComx, buffer, length, &bytesRead, NULL)) {
+        return -1;
+    }
+    return static_cast<int>(bytesRead);
+}
+
 HANDLE hCom;
 
-void scs_send(uint8_t* pkt, uint8_t pktsiz)
+void scs_port_init(const wchar_t* portName, DWORD baudRate, BYTE byteSize, BYTE parity, BYTE stopBits)
 {
+    hCom = OpenSerialPort(portName);
+    if (hCom == INVALID_HANDLE_VALUE) {
+        printf("Failed to open serial port %ls\n", portName);
+        return;
+    }
+    if (SetSerialPortParams(hCom, baudRate, byteSize, parity, stopBits) != 0) {
+        printf("Failed to set serial port parameters\n");
+        CloseHandle(hCom);
+        hCom = INVALID_HANDLE_VALUE;
+    }
+}
 
+void scs_send(uint8_t* buf, uint32_t size)
+{
+	WriteToSerialPort(hCom, buf, size);
+}
+
+uint32_t scs_recv(uint8_t* buf, uint32_t size)
+{
+    return (uint32_t)ReadFromSerialPort(hCom, buf, size);
+}
+
+void scs_delay(uint32_t delay_ms)
+{
+    Sleep(delay_ms);
+}
+
+uint32_t scs_gettick()
+{
+    return (uint32_t)GetTickCount();
 }
 
 int main()
@@ -43,7 +100,7 @@ int main()
     Uri uri(L"http://aka.ms/cppwinrt");
     printf("Hello, %ls!\n", uri.AbsoluteUri().c_str());
 
-	hCom = OpenSerialPort(L"COM3");
-
-
+	scs_port_init(L"COM3", 500000, 8, NOPARITY, ONE5STOPBITS);
+    int ret = scs_ping(42);
+    return 0;
 }
