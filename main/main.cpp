@@ -43,7 +43,7 @@ int main()
     Uri uri(L"http://aka.ms/cppwinrt");
     printf("Hello, %ls!\n", uri.AbsoluteUri().c_str());
 
-	hCom = OpenSerialPort(L"COM3");
+    hCom = OpenSerialPort(L"COM3");
 
-
+    return 0;
 }

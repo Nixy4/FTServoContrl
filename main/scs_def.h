@@ -21,15 +21,15 @@
 #define CODE_PARAM_BACKUP             0x09
 #define CODE_REBOOT                   0x08
 
-#define PKTIDX_MAGIC1                 0
-#define PKTIDX_MAGIC2                 1
-#define PKTIDX_ID                     2
-#define PKTIDX_PRO_LEN                3
-#define PKTIDX_CODE                   4
-#define PKTIDX_PARAM_START            5
-#define PKTIDX_PARAM_ADDR             5
-#define PKTIDX_PARAM(x)               (PKTIDX_PARAM_START + (x))
-#define PKTIDX_PARAM_END(bufsiz)      (bufsiz - 2) // 最后一个字节是校验和
-#define PKTIDX_CHECKSUM(bufsiz)       (bufsiz - 1)
+#define IDX_MAGIC1                 0
+#define IDX_MAGIC2                 1
+#define IDX_ID                     2
+#define IDX_PRO_LEN                3
+#define IDX_CODE                   4
+#define IDX_PARAM_START            5
+#define IDX_PARAM_ADDR             5
+#define IDX_PARAM(x)               (IDX_PARAM_START + (x))
+#define IDX_PARAM_END(pktsiz)      (pktsiz - 2) // 最后一个字节是校验和
+#define IDX_CHECKSUM(pktsiz)       (pktsiz - 1)
 
-#define PKT_MINIMUM_SIZE			  6 // magic(2) + id(1) + pro_len(1) + code(1) + checksum(1)
+#define PKT_MINIMUM_SIZE		    6 // magic(2) + id(1) + pro_len(1) + code(1) + checksum(1)

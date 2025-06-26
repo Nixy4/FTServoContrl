@@ -7,10 +7,10 @@
 extern "C" {
 #endif
 
-typedef void (*scs_send_callback)(uint8_t* pkt, uint32_t pktsiz);
-typedef uint32_t (*scs_recv_callback)(uint8_t* pkt, uint32_t bufsiz);
-typedef void (*scs_delay_callback)(uint32_t delay_ms);
-typedef uint32_t(*scs_gettick_callback)(void);
+typedef void	 (*scs_send_callback)(uint8_t* pkt, uint32_t pktsiz);
+typedef uint32_t (*scs_recv_callback)(uint8_t* buf, uint32_t bufsiz);
+typedef void     (*scs_delay_callback)(uint32_t delay_ms);
+typedef uint32_t (*scs_gettick_callback)(void);
 
 void scs_callback_register(
 	scs_send_callback send_cb, 
