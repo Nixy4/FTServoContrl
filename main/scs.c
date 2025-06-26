@@ -88,68 +88,68 @@ static inline uint32_t calc_param_size(uint32_t size)
 	// size - (magic(2) + id(1) + pro_len(1) + code(1) + checksum(1))
 }
 
-static void pack(uint8_t* pkt, uint32_t pktsiz,
+static void pack(uint8_t* buf, uint32_t bufsiz,
 	uint8_t id, uint8_t code, uint32_t param_len, ...)
 {
 	//Fill Header
-	pkt[PKTIDX_MAGIC1] = MAGIC1;
-	pkt[PKTIDX_MAGIC2] = MAGIC2;
-	pkt[PKTIDX_ID] = id;
-	pkt[PKTIDX_PRO_LEN] = calc_pro_len(param_len);
-	pkt[PKTIDX_CODE] = code;
+	buf[BUFIDX_MAGIC1] = MAGIC1;
+	buf[BUFIDX_MAGIC2] = MAGIC2;
+	buf[BUFIDX_ID] = id;
+	buf[BUFIDX_PROLEN] = calc_pro_len(param_len);
+	buf[BUFIDX_CODE] = code;
 	//Fill Params
 	if (param_len != 0) {
 		va_list params;
 		va_start(params, param_len);
 		for (uint32_t i = 0; i < param_len; i++) {
-			pkt[PKTIDX_PARAM(i)] = va_arg(params, int);
+			buf[BUFIDX_PARAM(i)] = va_arg(params, int);
 		}
 	}
 	//Fill Checksum
-	pkt[PKTIDX_CHECKSUM(pktsiz)] = calc_checksum(pkt, pktsiz);
+	buf[BUFIDX_CHECKSUM(bufsiz)] = calc_checksum(buf, bufsiz);
 }
 
-static void unpack(uint8_t* pkt, uint32_t pktsiz,
+static void unpack(uint8_t* buf, uint32_t bufsiz,
 	uint8_t* id, uint8_t* code, uint32_t* param_len, uint8_t* param_buf)
 {
-	if (pkt == NULL || pktsiz < PKT_MINIMUM_SIZE) {
+	if (buf == NULL || bufsiz < PACKET_MINIMUM_SIZE) {
 		return; // Invalid packet
 	}
-	if (pkt[PKTIDX_MAGIC1] != MAGIC1 || pkt[PKTIDX_MAGIC2] != MAGIC2) {
+	if (buf[BUFIDX_MAGIC1] != MAGIC1 || buf[BUFIDX_MAGIC2] != MAGIC2) {
 		return; // Invalid packet
 	}
 	if (id != NULL) {
-		*id = pkt[PKTIDX_ID];
+		*id = buf[BUFIDX_ID];
 	}
 	if (code != NULL) {
-		*code = pkt[PKTIDX_CODE];
+		*code = buf[BUFIDX_CODE];
 	}
 	if (param_len != NULL) {
-		*param_len = pkt[PKTIDX_PRO_LEN] - 2; // code(1) + checksum(1)
+		*param_len = buf[PACKET_MINIMUM_SIZE] - 2; // code(1) + checksum(1)
 	}
 }
 
 void scs_ping(uint8_t id)
 {
 	// Calculate packet size for ping
-	uint32_t pktsiz = calc_pktsiz(0);
+	uint32_t bufsiz = calc_bufsiz(0);
 	// Allocate memory for the packet
-	uint8_t* pkt = (uint8_t*)malloc(pktsiz);
-	if (pkt == NULL) {
+	uint8_t* buf = (uint8_t*)malloc(bufsiz);
+	if (buf == NULL) {
 		return; // Memory allocation failed
 	}
 	// Pack the ping packet
-	pack(pkt, pktsiz, id, CODE_PING, 0);
+	pack(buf, bufsiz, id, CODE_PING, 0);
 	// Send the packet
 	if (send != NULL) {
-		send(pkt, pktsiz);
+		send(buf, bufsiz);
 	}
 	// Recveive the response
-	memset(pkt, 0, pktsiz); // Clear the packet 
+	memset(buf, 0, bufsiz); // Clear the packet 
 	if (recv != NULL) {
-		pktsiz = recv(pkt, pktsiz);
+		bufsiz = recv(buf, bufsiz);
 	}
 	uint8_t id_ = 0;
 	uint8_t code_ = 0;
-	unpack(pkt, pktsiz, &id_, &code_, NULL, NULL);
+	unpack(buf, bufsiz, &id_, &code_, NULL, NULL);
 }
