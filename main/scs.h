@@ -7,16 +7,16 @@
 extern "C" {
 #endif
 
-#define SCS_OK				      0
-#define SCS_ERR_GENERIC           -1000
-#define SCS_ERR_CALLBACK  -1
-#define SCS_ERR_MEMORY_ALLOC      -2
-#define SCS_ERR_BUF_SIZE    -3
-#define SCS_ERR_MAGIC    -4
-#define SCS_ERR_CHECKSUM -5
-#define SCS_ERR_PARAM_SIZE -6
-#define SCS_ERR_RESPONSE_ID -7
-#define SCS_ERR_PACKET_SIZE -8
+#define SCS_OK                        0
+#define SCS_ERR_GENERIC              -1000
+#define SCS_ERR_CALLBACK             -1
+#define SCS_ERR_MEMORY_ALLOC         -2
+#define SCS_ERR_BUF_SIZE             -3
+#define SCS_ERR_MAGIC                -4
+#define SCS_ERR_CHECKSUM             -5
+#define SCS_ERR_PARAM_SIZE           -6
+#define SCS_ERR_RESPONSE_ID          -7
+#define SCS_ERR_PACKET_SIZE          -8
 
 typedef void (*scs_send_callback)(uint8_t* buf, uint32_t size);
 typedef uint32_t (*scs_recv_callback)(uint8_t* buf, uint32_t size);
@@ -28,6 +28,14 @@ void scs_callback_register(
 	scs_recv_callback recv_cb,
 	scs_delay_callback delay_cb,
 	scs_gettick_callback gettick_cb
+);
+
+typedef void* (*scs_malloc_callback)(size_t size);
+typedef void (*scs_free_callback)(void* ptr);
+
+void scs_memory_callback_register(
+	scs_malloc_callback malloc_cb,
+	scs_free_callback free_cb
 );
 
 typedef struct scs_header {

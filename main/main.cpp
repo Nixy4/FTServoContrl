@@ -5,6 +5,9 @@
 using namespace winrt;
 using namespace Windows::Foundation;
 
+HANDLE hCom;
+HANDLE hHeap;
+
 // 打开指定COM口，成功返回句柄，失败返回INVALID_HANDLE_VALUE
 HANDLE OpenSerialPort(const wchar_t* portName)
 {
@@ -58,7 +61,7 @@ int ReadFromSerialPort(HANDLE hComx, void* buffer, DWORD length)
     return static_cast<int>(bytesRead);
 }
 
-HANDLE hCom;
+
 
 void scs_port_init(const wchar_t* portName, DWORD baudRate, BYTE byteSize, BYTE parity, BYTE stopBits)
 {
@@ -94,11 +97,63 @@ uint32_t scs_gettick()
     return (uint32_t)GetTickCount();
 }
 
+void scs_memory_init()
+{
+    hHeap = GetProcessHeap();
+    if (hHeap == NULL) {
+        printf("Failed to get process heap\n");
+    }
+}
+
+void* scs_malloc(size_t size)
+{
+    if (hHeap == NULL) {
+        printf("Heap not initialized\n");
+        return NULL;
+    }
+    void* ptr = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, size);
+    if (ptr == NULL) {
+        printf("Memory allocation failed\n");
+    }
+    return ptr;
+}
+
+void scs_free(void* ptr)
+{
+    if (hHeap == NULL) {
+        printf("Heap not initialized\n");
+        return;
+    }
+    if (!HeapFree(hHeap, 0, ptr)) {
+        printf("Memory deallocation failed\n");
+    }
+}
+
 int main()
 {
     init_apartment();
     Uri uri(L"http://aka.ms/cppwinrt");
     printf("Hello, %ls!\n", uri.AbsoluteUri().c_str());
+
+    scs_callback_register(
+        scs_send,
+        scs_recv,
+        scs_delay,
+        scs_gettick
+	);
+
+	scs_memory_callback_register(
+        scs_malloc,
+        scs_free
+    );
+
+	scs_memory_init();
+
+    scs_port_init(L"COM3", 500000, 8, NOPARITY, ONE5STOPBITS);
+    if (hCom == INVALID_HANDLE_VALUE) {
+        printf("Failed to initialize serial port\n");
+        return -1;
+	}
 
 	scs_port_init(L"COM3", 500000, 8, NOPARITY, ONE5STOPBITS);
     int ret = scs_ping(42);
