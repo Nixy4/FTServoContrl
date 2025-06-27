@@ -16,12 +16,12 @@ static scs_delay_callback  delay      = NULL;
 static scs_gettick_callback gettick   = NULL;
 
 void scs_callback_register(
-    scs_malloc_callback malloc_cb,
-    scs_free_callback   free_cb,
-    scs_send_callback   send_cb,
-    scs_recv_callback   recv_cb,
-    scs_delay_callback  delay_cb,
-    scs_gettick_callback gettick_cb
+    const scs_malloc_callback malloc_cb,
+    const scs_free_callback   free_cb,
+    const scs_send_callback   send_cb,
+    const scs_recv_callback   recv_cb,
+    const scs_delay_callback  delay_cb,
+    const scs_gettick_callback gettick_cb
 ) {
     //1.处理内存回调
     if (malloc_cb != NULL && free_cb != NULL) {
@@ -54,24 +54,24 @@ void scs_callback_register(
 }
 
 static inline
-uint32_t calc_pktsiz(uint32_t paramlen)
+scs_size calc_pktsiz(scs_size paramlen)
 {
     // magic(2) + id(1) + pro_len(1) + code(1) + param(paramlen) + checksum(1)
     return 2 + 1 + 1 + 1 + paramlen + 1;
 }
 
 static inline
-uint8_t calc_prolen(int32_t paramlen)
+scs_size calc_prolen(scs_size paramlen)
 {
     // pro_len = code(1) + param(paramlen) + checksum(1)
-    return 1 + paramlen + 1;
+    return (uint8_t)(1 + paramlen + 1);
 }
 
 static inline
-uint8_t calc_checksum(uint8_t* pkt, uint32_t pktsiz)
+uint8_t calc_checksum(uint8_t* pkt, scs_size pktsiz)
 {
     uint16_t checksum = 0;
-    for (uint32_t i = INDEX_ID; i < INDEX_CHECKSUM(pktsiz); i++) // 不包括最后一个字节的校验和
+    for (scs_size i = INDEX_ID; i < INDEX_CHECKSUM(pktsiz); i++) // 不包括最后一个字节的校验和
     {
         checksum += pkt[i];
     }
@@ -84,7 +84,7 @@ uint8_t calc_checksum(uint8_t* pkt, uint32_t pktsiz)
     return checksum_byte;
 }
 
-static void elog_pkt(uint8_t* pkt, uint32_t pktsiz, uint32_t paramlen)
+static void elog_pkt(uint8_t* pkt, scs_size pktsiz, scs_size paramlen)
 {
 #define PRINT_PKT_FMT "%-20s : %-05d"
     elog_d(TAG, PRINT_PKT_FMT, "Packet Size", pktsiz); // 打印数据包长度
@@ -103,7 +103,7 @@ static void elog_pkt(uint8_t* pkt, uint32_t pktsiz, uint32_t paramlen)
 
 void scs_ping(uint8_t id)
 {
-    uint32_t pktsiz = calc_pktsiz(0);
+    scs_size pktsiz = calc_pktsiz(0);
     uint8_t* pkt = (uint8_t*)scs_malloc(pktsiz);
     if (pkt == NULL) {
         elog_e(TAG, "内存分配失败");
@@ -158,7 +158,7 @@ _free:
 
 void scs_set_pos(uint8_t id, uint16_t pos)
 {
-    uint32_t pktsiz = calc_pktsiz(2); // 2字节位置参数
+    scs_size pktsiz = calc_pktsiz(2); // 2字节位置参数
     uint8_t* pkt = (uint8_t*)scs_malloc(pktsiz);
     if (pkt == NULL) {
         elog_e(TAG, "内存分配失败");

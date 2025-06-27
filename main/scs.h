@@ -17,12 +17,12 @@ extern "C" {
 	typedef uint32_t (*scs_gettick_callback)(void);
 
 	void scs_callback_register(
-		scs_malloc_callback malloc_cb,
-		scs_free_callback free_cb,
-		scs_send_callback send_cb, 
-		scs_recv_callback recv_cb,
-		scs_delay_callback delay_cb,
-		scs_gettick_callback gettick_cb
+		const scs_malloc_callback malloc_cb,
+		const scs_free_callback   free_cb,
+		const scs_send_callback   send_cb,
+		const scs_recv_callback   recv_cb,
+		const scs_delay_callback  delay_cb,
+		const scs_gettick_callback gettick_cb
 	);
 
 	void scs_ping(uint8_t id);
