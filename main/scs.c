@@ -8,50 +8,50 @@
 #include <string.h>
 #include <stdlib.h>
 
-static scs_malloc_callback scs_malloc = NULL;
-static scs_free_callback   scs_free   = NULL;
-static scs_send_callback   send       = NULL;
-static scs_recv_callback   recv       = NULL;
-static scs_delay_callback  delay      = NULL;
-static scs_gettick_callback gettick   = NULL;
+//static scs_port_malloc_callback scs_port_malloc = NULL;
+//static scs_free_callback   scs_free   = NULL;
+//static scs_scs_port_send_callback   scs_port_send       = NULL;
+//static scs_recv_callback   recv       = NULL;
+//static scs_delay_callback  delay      = NULL;
+//static scs_gettick_callback gettick   = NULL;
 
-void scs_callback_register(
-    scs_malloc_callback malloc_cb,
-    scs_free_callback   free_cb,
-    scs_send_callback   send_cb,
-    scs_recv_callback   recv_cb,
-    scs_delay_callback  delay_cb,
-    scs_gettick_callback gettick_cb
-) {
-    //1.处理内存回调
-    if (malloc_cb != NULL && free_cb != NULL) {
-        scs_malloc = malloc_cb;
-        scs_free   = free_cb;
-    } else {
-        scs_malloc = malloc;
-        scs_free   = free;
-        elog_w(TAG, "使用标准库内存管理");
-    }
-    //2.处理数据传输回调
-    if (send_cb == NULL || recv_cb == NULL) {
-        elog_e(TAG, "未注册数据传输回调函数");
-    } else {
-        send = send_cb;
-        recv = recv_cb;
-    }
-    //3.处理延时回调
-    if (delay_cb != NULL) {
-        delay = delay_cb;
-    } else {
-        elog_w(TAG, "未注册延时回调函数, 将跳过所有延时");
-    }
-    //4.处理时间戳回调
-    if (gettick_cb != NULL) {
-        gettick = gettick_cb;
-    } else {
-        elog_w(TAG, "未注册时间戳回调函数，将跳过所有时间戳判断");
-    }
-}
+//void scs_callback_register(
+//    scs_port_malloc_callback malloc_cb,
+//    scs_free_callback   free_cb,
+//    scs_scs_port_send_callback   scs_port_send_cb,
+//    scs_recv_callback   recv_cb,
+//    scs_delay_callback  delay_cb,
+//    scs_gettick_callback gettick_cb
+//) {
+//    //1.处理内存回调
+//    if (malloc_cb != NULL && free_cb != NULL) {
+//        scs_port_malloc = malloc_cb;
+//        scs_free   = free_cb;
+//    } else {
+//        scs_port_malloc = malloc;
+//        scs_free   = free;
+//        elog_w(TAG, "使用标准库内存管理");
+//    }
+//    //2.处理数据传输回调
+//    if (scs_port_send_cb == NULL || recv_cb == NULL) {
+//        elog_e(TAG, "未注册数据传输回调函数");
+//    } else {
+//        scs_port_send = scs_port_send_cb;
+//        recv = recv_cb;
+//    }
+//    //3.处理延时回调
+//    if (delay_cb != NULL) {
+//        delay = delay_cb;
+//    } else {
+//        elog_w(TAG, "未注册延时回调函数, 将跳过所有延时");
+//    }
+//    //4.处理时间戳回调
+//    if (gettick_cb != NULL) {
+//        gettick = gettick_cb;
+//    } else {
+//        elog_w(TAG, "未注册时间戳回调函数，将跳过所有时间戳判断");
+//    }
+//}
 
 static inline
 uint32_t calc_pktsiz(uint32_t paramlen)
@@ -104,7 +104,7 @@ static void elog_pkt(uint8_t* pkt, uint32_t pktsiz, uint32_t paramlen)
 void scs_ping(uint8_t id)
 {
     uint32_t pktsiz = calc_pktsiz(0);
-    uint8_t* pkt = (uint8_t*)scs_malloc(pktsiz);
+    uint8_t* pkt = (uint8_t*)scs_port_malloc(pktsiz);
     if (pkt == NULL) {
         elog_e(TAG, "内存分配失败");
         return;
@@ -120,14 +120,10 @@ void scs_ping(uint8_t id)
     elog_d(TAG, "发送Ping数据包");
     elog_pkt(pkt, pktsiz, 0); // 打印数据包内容
     // 发送数据包
-    if (send != NULL) {
-        send(pkt, pktsiz);
-    } else {
-        elog_e(TAG, "未注册发送回调函数");
-    }
+    scs_port_send(pkt, pktsiz);
     // 准备接收响应数据包
     memset(pkt, 0, pktsiz); // 清空数据包缓冲
-    recv(pkt, pktsiz);      // 接收数据包
+    scs_port_recv(pkt, pktsiz);      // 接收数据包
     // 打印接收到的数据包
     elog_d(TAG, "接收到Ping响应数据包");
     elog_pkt(pkt, pktsiz, 0);
@@ -153,13 +149,13 @@ void scs_ping(uint8_t id)
         goto _free;
     }
 _free:
-    scs_free(pkt); // 释放数据包内存
+    scs_port_free(pkt); // 释放数据包内存
 }
 
 void scs_set_pos(uint8_t id, uint16_t pos)
 {
     uint32_t pktsiz = calc_pktsiz(2); // 2字节位置参数
-    uint8_t* pkt = (uint8_t*)scs_malloc(pktsiz);
+    uint8_t* pkt = (uint8_t*)scs_port_malloc(pktsiz);
     if (pkt == NULL) {
         elog_e(TAG, "内存分配失败");
         return;
@@ -177,10 +173,6 @@ void scs_set_pos(uint8_t id, uint16_t pos)
     elog_d(TAG, "发送设置位置数据包");
     elog_pkt(pkt, pktsiz, 2); // 打印数据包内容
     // 发送数据包
-    if (send != NULL) {
-        send(pkt, pktsiz);
-    } else {
-        elog_e(TAG, "未注册发送回调函数");
-    }
-    scs_free(pkt); // 释放数据包内存
+    scs_port_send(pkt, pktsiz);
+    scs_port_free(pkt); // 释放数据包内存
 }
