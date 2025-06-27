@@ -3,8 +3,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define PKT_MIN_BUFSIZ                          6  // magic(2) + id(1) + pro_len(1) + code(1) + checksum(1)
-#define PKT_MAX_BUFSIZ                          BUFSIZ
+#define PKT_MIN_BUFSIZ                          6	// magic(2) + id(1) + pro_len(1) + code(1) + checksum(1)
+#define PKT_MAX_BUFSIZ                          260 // magic(2) + id(1) + pro_len(1) + code(1) + param(253) + checksum(1)
 
 #define MAGIC1                                  0xFF
 #define MAGIC2                                  0xFF
@@ -72,11 +72,11 @@
 #define ADDR_SRAM_CTRL_LOCK_FLAG                0x30 // 锁标志, 1字节, 初始:1, 读写, 0~1, 0:关闭写入锁, 1:打开写入锁
 // 0x31 ~ 0x36 无定义, 1字节, 读写
 
-#define ADDR_SRAM_FEEDBACK_PRESENT_POSITION     0x38 // 当前位置, 2字节, 只读, 步
-#define ADDR_SRAM_FEEDBACK_PRESENT_SPEED        0x3A // 当前速度, 2字节, 只读, 步/s
-#define ADDR_SRAM_FEEDBACK_PRESENT_LOAD         0x3C // 当前负载, 2字节, 只读, 0.1%
-#define ADDR_SRAM_FEEDBACK_PRESENT_VOLTAGE      0x3E // 当前电压, 1字节, 只读, 0.1V
-#define ADDR_SRAM_FEEDBACK_PRESENT_TEMPERATURE  0x3F // 当前温度, 1字节, 只读, °C
-#define ADDR_SRAM_FEEDBACK_REGWRITE_FLAG        0x40 // 异步写标志, 1字节, 初始:0, 只读
-#define ADDR_SRAM_FEEDBACK_STATUS               0x41 // 舵机状态, 1字节, 初始:0, 只读
-#define ADDR_SRAM_FEEDBACK_MOVING_FLAG          0x42 // 移动标志, 1字节, 初始:0, 只读
+#define ADDR_SRAM_INFO_PRESENT_POSITION			0x38 // 当前位置, 2字节, 只读, 步
+#define ADDR_SRAM_INFO_PRESENT_SPEED			0x3A // 当前速度, 2字节, 只读, 步/s
+#define ADDR_SRAM_INFO_PRESENT_LOAD				0x3C // 当前负载, 2字节, 只读, 0.1%
+#define ADDR_SRAM_INFO_PRESENT_VOLTAGE			0x3E // 当前电压, 1字节, 只读, 0.1V
+#define ADDR_SRAM_INFO_PRESENT_TEMPERATURE		0x3F // 当前温度, 1字节, 只读, °C
+#define ADDR_SRAM_INFO_REGWRITE_FLAG			0x40 // 异步写标志, 1字节, 初始:0, 只读
+#define ADDR_SRAM_INFO_STATUS					0x41 // 舵机状态, 1字节, 初始:0, 只读
+#define ADDR_SRAM_INFO_MOVING_FLAG				0x42 // 移动标志, 1字节, 初始:0, 只读
