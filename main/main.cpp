@@ -23,6 +23,29 @@ HANDLE serial_open(const wchar_t* portName)
     return hComx;
 }
 
+int serial_config(HANDLE hComx, DWORD baudrate, BYTE parity, BYTE stopbits, BYTE bytesize)
+{
+    if (hComx == NULL || hComx == INVALID_HANDLE_VALUE) {
+        printf("Invalid serial handle\n");
+        return -1;
+    }
+    DCB dcb = {0};
+    dcb.DCBlength = sizeof(DCB);
+    if (!GetCommState(hComx, &dcb)) {
+        printf("GetCommState failed\n");
+        return -2;
+    }
+    dcb.BaudRate = baudrate;
+    dcb.Parity = parity;
+    dcb.StopBits = stopbits;
+    dcb.ByteSize = bytesize;
+    if (!SetCommState(hComx, &dcb)) {
+        printf("SetCommState failed\n");
+        return -3;
+    }
+    return 0;
+}
+
 // 关闭指定COM口
 void serial_close(HANDLE hComx)
 {
@@ -47,7 +70,7 @@ void scs_free(void* ptr)
     }
 }
 
-void scs_send(uint8_t* pkt, uint32_t pktsiz)
+void scs_send(uint8_t* pkt, scs_size pktsiz)
 {
     if (hCom == NULL || hCom == INVALID_HANDLE_VALUE) {
         printf("Serial port not open\n");
@@ -60,7 +83,7 @@ void scs_send(uint8_t* pkt, uint32_t pktsiz)
     }
 }
 
-uint32_t scs_recv(uint8_t* buf, uint32_t bufsiz)
+scs_size scs_recv(uint8_t* buf, scs_size bufsiz)
 {
     if (hCom == NULL || hCom == INVALID_HANDLE_VALUE) {
         printf("Serial port not open\n");
@@ -72,7 +95,7 @@ uint32_t scs_recv(uint8_t* buf, uint32_t bufsiz)
         printf("Read from serial port failed\n");
         return 0;
     }
-    return (uint32_t)bytesRead;
+    return (scs_size)bytesRead;
 }
 
 void scs_delay(uint32_t delay_ms)
@@ -88,8 +111,6 @@ uint32_t scs_gettick()
 int main()
 {
     init_apartment();
-    Uri uri(L"http://aka.ms/cppwinrt");
-    printf("Hello, %ls!\n", uri.AbsoluteUri().c_str());
 
 	//注册回调函数
     scs_callback_register(
@@ -103,11 +124,14 @@ int main()
 
 	//初始化COM口和获取进程堆
     hCom = serial_open(L"COM5");
+	serial_config(hCom, 512000, NOPARITY, ONESTOPBIT, 8);
 	hHeap = GetProcessHeap();
-    while (1) {
-        scs_ping(42);
-		Sleep(1000); // 每秒发送一次Ping
-    }
+
+    scs_set_pos(1, 0);
+    Sleep(1000);
+    scs_set_pos(1, 1023);
+    Sleep(1000);
+    scs_set_pos(1, 0);
 
     return 0;
 }
